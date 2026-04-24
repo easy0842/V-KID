@@ -28,6 +28,7 @@ Dataset: `data/raw/vkid_mvp.npz`
 Goal: Verify 3-DOF bicycle simulator, action generator, parameter sampling, dataset serialization, and sanity plot generation.
 Result: Success.
 Key plots: `outputs/figures/simulation_mvp/sanity_condition_00_sequence_00.png`
+Summary artifacts: `outputs/figures/simulation_mvp/summary/`
 Notes:
 
 ```text

@@ -41,9 +41,10 @@ Generate the MVP simulation dataset:
 
 ```bash
 python3 scripts/generate_dataset.py --config configs/sim_mvp.yaml
+python3 scripts/summarize_dataset.py --dataset data/raw/vkid_mvp.npz
 ```
 
-This writes `data/raw/vkid_mvp.npz` and a sanity-check plot under `outputs/figures/simulation_mvp/`.
+This writes `data/raw/vkid_mvp.npz`, sanity-check plots, summary CSVs, and summary JSON files under `outputs/figures/simulation_mvp/`.
 
 Planned next scripts:
 

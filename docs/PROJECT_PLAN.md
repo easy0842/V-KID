@@ -305,6 +305,7 @@ The MLP baseline is mandatory. DMD/EDMD is the most course-aligned comparison.
 - [x] Implement dataset generation script.
 - [x] Generate MVP dataset.
 - [x] Plot simulator sanity checks.
+- [x] Implement Phase 1 dataset summary script.
 - [ ] Implement dataset loader and cross-sequence sampler.
 - [ ] Implement Transformer VAE encoder.
 - [ ] Implement MLP decoder baseline.
@@ -324,6 +325,7 @@ Current MVP dataset command:
 
 ```bash
 python3 scripts/generate_dataset.py --config configs/sim_mvp.yaml --plot-dir outputs/figures/simulation_mvp
+python3 scripts/summarize_dataset.py --dataset data/raw/vkid_mvp.npz --output-dir outputs/figures/simulation_mvp/summary
 ```
 
 Verified MVP output:
@@ -337,3 +339,11 @@ validation condition ids: 9-11
 ```
 
 The simulator includes a sanity filter that regenerates sequences with too-low forward speed, excessive lateral velocity, or excessive yaw rate.
+
+Summary artifacts:
+
+- `condition_summary.csv`
+- `sequence_summary.csv`
+- `range_summary.json`
+- `trajectory_grid.png`
+- `feature_histograms.png`
