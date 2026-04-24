@@ -1,0 +1,13 @@
+seed: 42
+
+data:
+  dataset_path: data/raw/vkid_mvp.npz
+
+model:
+  checkpoint_path: outputs/checkpoints/mlp_mvp/best.pt
+
+eval:
+  context_lengths: [5, 10, 20, 50, 100, 200]
+  distance: euclidean
+  top_k: [1, 3]
+  output_dir: outputs/figures/progressive_mvp
