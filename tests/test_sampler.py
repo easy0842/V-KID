@@ -55,6 +55,24 @@ def test_dataset_loader_and_sampler_batch_shapes(tmp_path) -> None:
     assert np.all(batch["anchor_mask"].sum(axis=1) == batch["context_length"])
 
 
+def test_sampler_can_return_raw_values(tmp_path) -> None:
+    path = tmp_path / "toy.npz"
+    _write_toy_dataset(path)
+    dataset = VkidSimulationDataset(path)
+    sampler = CrossSequenceBatchSampler(
+        dataset,
+        context_min=2,
+        context_max=2,
+        queries_per_context=2,
+        seed=123,
+        normalize=False,
+    )
+
+    batch = sampler.sample_batch(batch_size=2, split="train")
+
+    assert np.isin(batch["anchor_context"][..., 0], [0.0, 1.0]).all()
+
+
 def test_sampler_rejects_val_split_with_one_condition(tmp_path) -> None:
     path = tmp_path / "toy.npz"
     _write_toy_dataset(path)

@@ -307,8 +307,8 @@ The MLP baseline is mandatory. DMD/EDMD is the most course-aligned comparison.
 - [x] Plot simulator sanity checks.
 - [x] Implement Phase 1 dataset summary script.
 - [x] Implement dataset loader and cross-sequence sampler.
-- [ ] Implement Transformer VAE encoder.
-- [ ] Implement MLP decoder baseline.
+- [x] Implement Transformer VAE encoder.
+- [x] Implement MLP decoder baseline smoke training.
 
 ## 14. Current Simulator Status
 
@@ -375,3 +375,22 @@ context_length: (32,)
 ```
 
 `T_max` varies by batch according to the longest sampled context in that batch.
+
+## 16. Current MLP Baseline Status
+
+Implemented files:
+
+- `src/vkid/models/vae_mlp.py`
+- `src/vkid/training/losses.py`
+- `src/vkid/training/mlp_baseline.py`
+- `scripts/train_mlp_baseline.py`
+- `configs/train_mlp_smoke.yaml`
+- `tests/test_vae_mlp.py`
+
+Smoke training command:
+
+```bash
+python3 scripts/train_mlp_baseline.py --config configs/train_mlp_smoke.yaml
+```
+
+Current smoke training uses normalized inputs and normalized target deltas. The sampler computes normalization statistics from train conditions only.

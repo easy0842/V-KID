@@ -6,6 +6,7 @@ data:
   train_context_min: 5
   train_context_max: 200
   queries_per_context: 64
+  normalize: true
 
 model:
   latent_dim: 8

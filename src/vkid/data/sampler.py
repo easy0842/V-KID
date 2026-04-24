@@ -48,6 +48,13 @@ class VkidSimulationDataset:
             self.val_condition_ids = data["val_condition_ids"].astype(np.int64)
             self.sample_rate_hz = float(data["sample_rate_hz"])
             self.sequence_length_s = float(data["sequence_length_s"])
+        train_ids = self.train_condition_ids
+        train_inputs = self.inputs[train_ids]
+        train_targets = self.target_delta[train_ids]
+        self.input_mean = train_inputs.reshape(-1, self.input_dim).mean(axis=0).astype(np.float32)
+        self.input_std = (train_inputs.reshape(-1, self.input_dim).std(axis=0) + 1e-6).astype(np.float32)
+        self.target_mean = train_targets.reshape(-1, self.target_dim).mean(axis=0).astype(np.float32)
+        self.target_std = (train_targets.reshape(-1, self.target_dim).std(axis=0) + 1e-6).astype(np.float32)
 
     @property
     def n_conditions(self) -> int:
@@ -89,6 +96,7 @@ class CrossSequenceBatchSampler:
         context_max: int,
         queries_per_context: int,
         seed: int = 0,
+        normalize: bool = True,
     ):
         if context_min < 1:
             raise ValueError("context_min must be positive")
@@ -106,6 +114,17 @@ class CrossSequenceBatchSampler:
         self.context_max = int(context_max)
         self.queries_per_context = int(queries_per_context)
         self.rng = np.random.default_rng(seed)
+        self.normalize = bool(normalize)
+
+    def _normalize_inputs(self, values: np.ndarray) -> np.ndarray:
+        if not self.normalize:
+            return values.astype(np.float32)
+        return ((values - self.dataset.input_mean) / self.dataset.input_std).astype(np.float32)
+
+    def _normalize_targets(self, values: np.ndarray) -> np.ndarray:
+        if not self.normalize:
+            return values.astype(np.float32)
+        return ((values - self.dataset.target_mean) / self.dataset.target_std).astype(np.float32)
 
     def sample_context(
         self,
@@ -119,7 +138,7 @@ class CrossSequenceBatchSampler:
             length = int(self.rng.integers(self.context_min, self.context_max + 1))
         max_start = self.dataset.n_steps - length
         start_index = int(self.rng.integers(0, max_start + 1))
-        values = self.dataset.inputs[condition_id, sequence_id, start_index : start_index + length]
+        values = self._normalize_inputs(self.dataset.inputs[condition_id, sequence_id, start_index : start_index + length])
         return ContextSample(condition_id, sequence_id, start_index, length, values)
 
     def sample_queries(
@@ -141,8 +160,8 @@ class CrossSequenceBatchSampler:
             condition_id=condition_id,
             sequence_id=sequence_id,
             indices=indices,
-            inputs=self.dataset.inputs[condition_id, sequence_id, indices],
-            targets=self.dataset.target_delta[condition_id, sequence_id, indices],
+            inputs=self._normalize_inputs(self.dataset.inputs[condition_id, sequence_id, indices]),
+            targets=self._normalize_targets(self.dataset.target_delta[condition_id, sequence_id, indices]),
         )
 
     def sample_batch(self, batch_size: int, split: Split = "train") -> dict[str, np.ndarray]:

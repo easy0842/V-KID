@@ -53,3 +53,9 @@ Planned next scripts:
 python3 scripts/train_mlp_baseline.py --config configs/train_mlp_mvp.yaml
 python3 scripts/evaluate_progressive.py --config configs/eval_progressive_mvp.yaml
 ```
+
+For a quick training smoke test:
+
+```bash
+python3 scripts/train_mlp_baseline.py --config configs/train_mlp_smoke.yaml
+```

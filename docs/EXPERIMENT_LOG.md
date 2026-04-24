@@ -63,3 +63,23 @@ query_target=(32, 64, 3)
 ```
 
 Next action: implement Transformer VAE encoder and MLP decoder baseline.
+
+## 2026-04-24: MLP Baseline Smoke Training
+
+Date: 2026-04-24
+Experiment ID: mlp_smoke_initial
+Config: `configs/train_mlp_smoke.yaml`
+Dataset: `data/raw/vkid_mvp.npz`
+Goal: Verify Transformer VAE encoder, MLP decoder, losses, optimizer step, validation loop, and checkpoint writing.
+Result: Success.
+Notes:
+
+```text
+epoch 1 train_rmse ~= 0.739, val_rmse ~= 0.641
+epoch 2 train_rmse ~= 0.986, val_rmse ~= 0.732
+checkpoint_dir = outputs/checkpoints/mlp_smoke
+```
+
+The RMSE is in normalized target-delta units for this smoke test.
+
+Next action: run a longer MLP MVP training job and inspect progressive sigma behavior.

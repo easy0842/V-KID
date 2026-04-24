@@ -29,11 +29,13 @@ def main() -> None:
         context_max=config["data"]["train_context_max"],
         queries_per_context=config["data"]["queries_per_context"],
         seed=config["seed"],
+        normalize=config["data"].get("normalize", True),
     )
     batch = sampler.sample_batch(config["train"]["batch_size"], split=args.split)
 
     print(f"dataset: {dataset.path}")
     print(f"conditions={dataset.n_conditions}, sequences={dataset.n_sequences}, steps={dataset.n_steps}")
+    print(f"normalize={sampler.normalize}")
     for key, value in batch.items():
         print(f"{key}: shape={value.shape}, dtype={value.dtype}")
     print("first condition ids:", batch["condition_id"][:8].tolist())

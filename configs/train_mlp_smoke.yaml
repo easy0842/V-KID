@@ -1,0 +1,40 @@
+seed: 123
+
+data:
+  dataset_path: data/raw/vkid_mvp.npz
+  context_lengths: [5, 10, 20]
+  train_context_min: 5
+  train_context_max: 30
+  queries_per_context: 16
+  normalize: true
+
+model:
+  latent_dim: 4
+  input_dim: 5
+  state_dim: 3
+  action_dim: 2
+  d_model: 32
+  transformer_layers: 1
+  transformer_heads: 4
+  transformer_ff_dim: 64
+  dropout: 0.1
+  mlp_hidden_dim: 64
+  mlp_layers: 2
+
+loss:
+  beta_kl: 0.001
+  lambda_consistency: 0.05
+  triplet_margin: 1.0
+  use_nll: false
+
+train:
+  batch_size: 8
+  epochs: 2
+  steps_per_epoch: 3
+  val_steps: 2
+  learning_rate: 0.0001
+  weight_decay: 0.0
+  grad_clip_norm: 1.0
+  device: auto
+  checkpoint_dir: outputs/checkpoints/mlp_smoke
+  log_dir: outputs/logs/mlp_smoke
