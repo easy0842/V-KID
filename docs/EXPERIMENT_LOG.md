@@ -43,3 +43,23 @@ yaw-rate range ~= -57.2-51.4 deg/s
 ```
 
 Next action: implement dataset loader and cross-sequence sampler for the MLP VAE baseline.
+
+## 2026-04-24: Cross-Sequence Sampler Inspection
+
+Date: 2026-04-24
+Experiment ID: sampler_mvp_initial
+Config: `configs/train_mlp_mvp.yaml`
+Dataset: `data/raw/vkid_mvp.npz`
+Goal: Verify anchor/positive/negative context sampling and cross-sequence query sampling.
+Result: Success.
+Notes:
+
+```text
+anchor_context=(32, 197, 5)
+positive_context=(32, 197, 5)
+negative_context=(32, 197, 5)
+query_input=(32, 64, 5)
+query_target=(32, 64, 3)
+```
+
+Next action: implement Transformer VAE encoder and MLP decoder baseline.

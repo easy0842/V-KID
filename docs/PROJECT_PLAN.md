@@ -306,7 +306,7 @@ The MLP baseline is mandatory. DMD/EDMD is the most course-aligned comparison.
 - [x] Generate MVP dataset.
 - [x] Plot simulator sanity checks.
 - [x] Implement Phase 1 dataset summary script.
-- [ ] Implement dataset loader and cross-sequence sampler.
+- [x] Implement dataset loader and cross-sequence sampler.
 - [ ] Implement Transformer VAE encoder.
 - [ ] Implement MLP decoder baseline.
 
@@ -347,3 +347,31 @@ Summary artifacts:
 - `range_summary.json`
 - `trajectory_grid.png`
 - `feature_histograms.png`
+
+## 15. Current Phase 2 Data Sampler Status
+
+Implemented files:
+
+- `src/vkid/data/sampler.py`
+- `scripts/inspect_sampler.py`
+- `tests/test_sampler.py`
+
+Sampler inspection command:
+
+```bash
+python3 scripts/inspect_sampler.py --config configs/train_mlp_mvp.yaml --split train
+```
+
+Verified batch shapes:
+
+```text
+anchor_context: (32, T_max, 5)
+anchor_mask: (32, T_max)
+positive_context: (32, T_max, 5)
+negative_context: (32, T_max, 5)
+query_input: (32, 64, 5)
+query_target: (32, 64, 3)
+context_length: (32,)
+```
+
+`T_max` varies by batch according to the longest sampled context in that batch.
