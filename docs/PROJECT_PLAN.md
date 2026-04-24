@@ -298,13 +298,42 @@ The MLP baseline is mandatory. DMD/EDMD is the most course-aligned comparison.
 
 ## 13. Immediate Next Tasks
 
-- [ ] Implement simulation parameter dataclasses.
-- [ ] Implement Magic Formula tire force.
-- [ ] Implement bicycle-model derivative function.
-- [ ] Implement filtered steering and longitudinal-force generator.
-- [ ] Implement dataset generation script.
-- [ ] Generate MVP dataset.
-- [ ] Plot simulator sanity checks.
+- [x] Implement simulation parameter dataclasses.
+- [x] Implement Magic Formula tire force.
+- [x] Implement bicycle-model derivative function.
+- [x] Implement filtered steering and longitudinal-force generator.
+- [x] Implement dataset generation script.
+- [x] Generate MVP dataset.
+- [x] Plot simulator sanity checks.
 - [ ] Implement dataset loader and cross-sequence sampler.
 - [ ] Implement Transformer VAE encoder.
 - [ ] Implement MLP decoder baseline.
+
+## 14. Current Simulator Status
+
+Implemented files:
+
+- `src/vkid/simulation/parameters.py`
+- `src/vkid/simulation/actions.py`
+- `src/vkid/simulation/dynamics.py`
+- `src/vkid/simulation/dataset.py`
+- `src/vkid/simulation/plots.py`
+- `scripts/generate_dataset.py`
+
+Current MVP dataset command:
+
+```bash
+python3 scripts/generate_dataset.py --config configs/sim_mvp.yaml --plot-dir outputs/figures/simulation_mvp
+```
+
+Verified MVP output:
+
+```text
+states: (12, 4, 1000, 3)
+actions: (12, 4, 1000, 2)
+target_delta: (12, 4, 999, 3)
+train condition ids: 0-8
+validation condition ids: 9-11
+```
+
+The simulator includes a sanity filter that regenerates sequences with too-low forward speed, excessive lateral velocity, or excessive yaw rate.

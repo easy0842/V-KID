@@ -34,12 +34,20 @@ tests/                   Unit and smoke tests
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
-Planned first runnable scripts:
+Generate the MVP simulation dataset:
 
 ```bash
 python3 scripts/generate_dataset.py --config configs/sim_mvp.yaml
+```
+
+This writes `data/raw/vkid_mvp.npz` and a sanity-check plot under `outputs/figures/simulation_mvp/`.
+
+Planned next scripts:
+
+```bash
 python3 scripts/train_mlp_baseline.py --config configs/train_mlp_mvp.yaml
 python3 scripts/evaluate_progressive.py --config configs/eval_progressive_mvp.yaml
 ```

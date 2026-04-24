@@ -1,17 +1,17 @@
-seed: 42
+seed: 7
 
 dataset:
-  name: vkid_mvp
-  output_path: data/raw/vkid_mvp.npz
-  conditions: 12
-  sequences_per_condition: 4
-  sequence_length_s: 20.0
-  sample_rate_hz: 50.0
-  train_condition_fraction: 0.75
+  name: vkid_smoke
+  output_path: data/raw/vkid_smoke.npz
+  conditions: 2
+  sequences_per_condition: 1
+  sequence_length_s: 3.0
+  sample_rate_hz: 20.0
+  train_condition_fraction: 0.5
 
 vehicle:
   wheelbase_m: 2.7
-  vx0_kmh_range: [40.0, 120.0]
+  vx0_kmh_range: [50.0, 80.0]
   lf_ratio_range: [0.45, 0.55]
   mass_kg_range: [1200.0, 2000.0]
   iz_kgm2_range: [1500.0, 3500.0]
@@ -24,9 +24,9 @@ tire:
 
 action:
   steer_cutoff_hz: 0.8
-  steer_amplitude_deg_range: [3.0, 15.0]
+  steer_amplitude_deg_range: [3.0, 10.0]
   fx_cutoff_hz: 0.4
-  fx_amplitude_n_range: [2000.0, 3000.0]
+  fx_amplitude_n_range: [1500.0, 2500.0]
   event_probability: 0.25
 
 sanity:
