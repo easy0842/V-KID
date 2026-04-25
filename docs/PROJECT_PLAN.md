@@ -394,3 +394,28 @@ python3 scripts/train_mlp_baseline.py --config configs/train_mlp_smoke.yaml
 ```
 
 Current smoke training uses normalized inputs and normalized target deltas. The sampler computes normalization statistics from train conditions only.
+
+## 17. Current Progressive Evaluation Status
+
+Implemented files:
+
+- `src/vkid/analysis/progressive.py`
+- `scripts/evaluate_progressive.py`
+- `tests/test_progressive.py`
+
+Evaluation command:
+
+```bash
+python3 scripts/evaluate_progressive.py --config configs/eval_progressive_mvp.yaml
+```
+
+Initial result with `outputs/checkpoints/mlp_mvp_long/best.pt`:
+
+```text
+context length: 5, 10, 20, 50, 100, 200
+sigma mean: roughly 0.373-0.384
+val top-1: roughly 0.00-0.25
+val top-3: roughly 0.42-0.50
+```
+
+Interpretation: the current baseline learns prediction, but sigma does not yet show progressive uncertainty reduction. The next model iteration should add an objective or training schedule that explicitly calibrates uncertainty by context informativeness.

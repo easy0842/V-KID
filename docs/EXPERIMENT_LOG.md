@@ -83,3 +83,31 @@ checkpoint_dir = outputs/checkpoints/mlp_smoke
 The RMSE is in normalized target-delta units for this smoke test.
 
 Next action: run a longer MLP MVP training job and inspect progressive sigma behavior.
+
+## 2026-04-25: Progressive Sigma Evaluation
+
+Date: 2026-04-25
+Experiment ID: progressive_mvp_initial
+Config: `configs/eval_progressive_mvp.yaml`
+Dataset: `data/raw/vkid_mvp.npz`
+Checkpoint: `outputs/checkpoints/mlp_mvp_long/best.pt`
+Goal: Check whether sigma decreases as the observed driving context grows.
+Result: Baseline does not yet show progressive sigma reduction.
+Key plots: `outputs/figures/progressive_mvp/`
+Notes:
+
+```text
+Val sigma mean:
+T=5   -> 0.3729
+T=10  -> 0.3797
+T=20  -> 0.3795
+T=50  -> 0.3820
+T=100 -> 0.3809
+T=200 -> 0.3842
+
+Val top-1 accuracy: 0.00-0.25
+Val top-3 accuracy: 0.42-0.50
+```
+
+Interpretation: prediction training alone is insufficient to make VAE sigma behave like progressive identification uncertainty.
+Next action: add uncertainty calibration or context-length-aware training objectives.
