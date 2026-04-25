@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn
 
@@ -123,7 +124,9 @@ def train_mlp_baseline(config: dict[str, Any]) -> dict[str, Any]:
     )
 
     checkpoint_dir = Path(config["train"]["checkpoint_dir"])
+    log_dir = Path(config["train"]["log_dir"])
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
     epochs = int(config["train"]["epochs"])
     steps_per_epoch = int(config["train"].get("steps_per_epoch", 100))
     val_steps = int(config["train"].get("val_steps", 10))
@@ -146,6 +149,7 @@ def train_mlp_baseline(config: dict[str, Any]) -> dict[str, Any]:
         val_summary = {f"val_{key}": value for key, value in evaluate(model, sampler, config, device, "val", val_steps).items()}
         row = {"epoch": float(epoch), **train_summary, **val_summary}
         history.append(row)
+        pd.DataFrame(history).to_csv(log_dir / "history.csv", index=False)
         print(
             f"epoch={epoch:03d} "
             f"train_rmse={row['train_rmse']:.5f} val_rmse={row['val_rmse']:.5f} "
@@ -165,4 +169,4 @@ def train_mlp_baseline(config: dict[str, Any]) -> dict[str, Any]:
             )
 
     torch.save({"model_state": model.state_dict(), "config": config, "history": history}, checkpoint_dir / "last.pt")
-    return {"history": history, "best_val_mse": best_val, "checkpoint_dir": str(checkpoint_dir)}
+    return {"history": history, "best_val_mse": best_val, "checkpoint_dir": str(checkpoint_dir), "log_dir": str(log_dir)}
