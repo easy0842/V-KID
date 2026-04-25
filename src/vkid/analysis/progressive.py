@@ -77,7 +77,20 @@ def _rank_conditions(mu: np.ndarray, reference_mu: np.ndarray) -> np.ndarray:
     return np.argsort(distances)
 
 
-def _write_plots(summary: pd.DataFrame, output_dir: Path, sample_rate_hz: float) -> None:
+def _context_excitation(dataset: VkidSimulationDataset, condition_id: int, sequence_id: int, length: int) -> dict[str, float]:
+    states = dataset.states[condition_id, sequence_id, :length]
+    actions = dataset.actions[condition_id, sequence_id, :length]
+    return {
+        "steer_std_deg": float(np.rad2deg(actions[:, 0]).std()),
+        "fx_std_n": float(actions[:, 1].std()),
+        "yaw_rate_std_deg_s": float(np.rad2deg(states[:, 2]).std()),
+        "vy_std_kmh": float((states[:, 1] * 3.6).std()),
+        "max_abs_steer_deg": float(np.rad2deg(np.abs(actions[:, 0]).max())),
+        "max_abs_yaw_rate_deg_s": float(np.rad2deg(np.abs(states[:, 2]).max())),
+    }
+
+
+def _write_plots(summary: pd.DataFrame, detail: pd.DataFrame, output_dir: Path, sample_rate_hz: float) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     seconds = summary["context_length"] / sample_rate_hz
 
@@ -111,6 +124,46 @@ def _write_plots(summary: pd.DataFrame, output_dir: Path, sample_rate_hz: float)
     ax.set_title("Latent convergence to condition reference")
     ax.grid(True)
     fig.savefig(output_dir / "mu_distance_vs_context.png", dpi=170)
+    plt.close(fig)
+
+    sigma_dim_columns = [column for column in summary.columns if column.startswith("sigma_dim_")]
+    if sigma_dim_columns:
+        fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
+        for column in sigma_dim_columns:
+            ax.plot(seconds, summary[column], marker="o", label=column.replace("sigma_dim_", "z"))
+        ax.set_xlabel("context time [s]")
+        ax.set_ylabel("sigma")
+        ax.set_title("Sigma by latent dimension")
+        ax.grid(True)
+        ax.legend(ncol=2, fontsize=8)
+        fig.savefig(output_dir / "sigma_by_dimension.png", dpi=170)
+        plt.close(fig)
+
+    condition_summary = (
+        detail.groupby(["condition_id", "context_length"])
+        .agg(context_time_s=("context_time_s", "mean"), sigma_mean=("sigma_mean", "mean"))
+        .reset_index()
+    )
+    fig, ax = plt.subplots(figsize=(8, 5), constrained_layout=True)
+    for condition_id, group in condition_summary.groupby("condition_id"):
+        ax.plot(group["context_time_s"], group["sigma_mean"], marker="o", label=f"C{condition_id}")
+    ax.set_xlabel("context time [s]")
+    ax.set_ylabel("sigma")
+    ax.set_title("Sigma by condition")
+    ax.grid(True)
+    ax.legend(ncol=3, fontsize=8)
+    fig.savefig(output_dir / "sigma_by_condition.png", dpi=170)
+    plt.close(fig)
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4), constrained_layout=True)
+    for axis, feature in zip(axes, ["steer_std_deg", "yaw_rate_std_deg_s", "fx_std_n"]):
+        axis.scatter(detail[feature], detail["sigma_mean"], alpha=0.75)
+        corr = detail[[feature, "sigma_mean"]].corr(method="spearman").iloc[0, 1]
+        axis.set_title(f"{feature} vs sigma\nSpearman={corr:.2f}")
+        axis.set_xlabel(feature)
+        axis.set_ylabel("sigma")
+        axis.grid(True)
+    fig.savefig(output_dir / "sigma_vs_excitation.png", dpi=170)
     plt.close(fig)
 
 
@@ -152,22 +205,28 @@ def evaluate_progressive(config: dict[str, Any]) -> dict[str, Path]:
             top1 = int(ranked_condition_ids[0])
             top3 = [int(item) for item in ranked_condition_ids[:3]]
             own_ref_idx = int(np.where(ref_ids == condition_id)[0][0])
+            row = {
+                "context_length": context_length,
+                "context_time_s": context_length / dataset.sample_rate_hz,
+                "condition_id": condition_id,
+                "sequence_id": sequence_id,
+                "sigma_mean": float(sigma[row_idx].mean()),
+                "sigma_min": float(sigma[row_idx].min()),
+                "sigma_max": float(sigma[row_idx].max()),
+                "mu_norm": float(np.linalg.norm(mu[row_idx])),
+                "mu_to_reference": float(np.linalg.norm(mu[row_idx] - ref_mu[own_ref_idx])),
+                "top1_condition_id": top1,
+                "top3_condition_ids": " ".join(str(item) for item in top3),
+                "top1_correct": top1 == condition_id,
+                "top3_correct": condition_id in top3,
+                **_context_excitation(dataset, condition_id, sequence_id, context_length),
+            }
+            for dim, value in enumerate(sigma[row_idx]):
+                row[f"sigma_dim_{dim}"] = float(value)
+            for dim, value in enumerate(mu[row_idx]):
+                row[f"mu_dim_{dim}"] = float(value)
             rows.append(
-                {
-                    "context_length": context_length,
-                    "context_time_s": context_length / dataset.sample_rate_hz,
-                    "condition_id": condition_id,
-                    "sequence_id": sequence_id,
-                    "sigma_mean": float(sigma[row_idx].mean()),
-                    "sigma_min": float(sigma[row_idx].min()),
-                    "sigma_max": float(sigma[row_idx].max()),
-                    "mu_norm": float(np.linalg.norm(mu[row_idx])),
-                    "mu_to_reference": float(np.linalg.norm(mu[row_idx] - ref_mu[own_ref_idx])),
-                    "top1_condition_id": top1,
-                    "top3_condition_ids": " ".join(str(item) for item in top3),
-                    "top1_correct": top1 == condition_id,
-                    "top3_correct": condition_id in top3,
-                }
+                row
             )
 
     detail = pd.DataFrame(rows)
@@ -184,6 +243,10 @@ def evaluate_progressive(config: dict[str, Any]) -> dict[str, Path]:
         )
         .reset_index()
     )
+    sigma_dim_columns = [column for column in detail.columns if column.startswith("sigma_dim_")]
+    if sigma_dim_columns:
+        sigma_dim_summary = detail.groupby("context_length")[sigma_dim_columns].mean().reset_index()
+        summary = summary.merge(sigma_dim_summary, on="context_length", how="left")
 
     detail_path = output_dir / "progressive_detail.csv"
     summary_path = output_dir / "progressive_summary.csv"
@@ -191,7 +254,24 @@ def evaluate_progressive(config: dict[str, Any]) -> dict[str, Path]:
     detail.to_csv(detail_path, index=False)
     summary.to_csv(summary_path, index=False)
     np.savez_compressed(reference_path, condition_ids=ref_ids, reference_mu=ref_mu)
-    _write_plots(summary, output_dir, dataset.sample_rate_hz)
+    correlation_path = output_dir / "sigma_excitation_correlations.csv"
+    excitation_columns = [
+        "steer_std_deg",
+        "fx_std_n",
+        "yaw_rate_std_deg_s",
+        "vy_std_kmh",
+        "max_abs_steer_deg",
+        "max_abs_yaw_rate_deg_s",
+    ]
+    correlations = [
+        {
+            "feature": feature,
+            "spearman_with_sigma_mean": float(detail[[feature, "sigma_mean"]].corr(method="spearman").iloc[0, 1]),
+        }
+        for feature in excitation_columns
+    ]
+    pd.DataFrame(correlations).to_csv(correlation_path, index=False)
+    _write_plots(summary, detail, output_dir, dataset.sample_rate_hz)
 
     return {
         "detail": detail_path,
@@ -200,4 +280,8 @@ def evaluate_progressive(config: dict[str, Any]) -> dict[str, Path]:
         "sigma_plot": output_dir / "sigma_vs_context.png",
         "matching_plot": output_dir / "matching_vs_context.png",
         "mu_distance_plot": output_dir / "mu_distance_vs_context.png",
+        "sigma_dimension_plot": output_dir / "sigma_by_dimension.png",
+        "sigma_condition_plot": output_dir / "sigma_by_condition.png",
+        "sigma_excitation_plot": output_dir / "sigma_vs_excitation.png",
+        "sigma_excitation_correlations": correlation_path,
     }
